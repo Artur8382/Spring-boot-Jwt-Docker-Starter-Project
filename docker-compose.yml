@@ -1,0 +1,37 @@
+services:
+  # Database
+  db:
+    image: mysql:8.4 # Using the 2024/2025 LTS version of MySQL
+    container_name: mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: personal_site
+    ports:
+      - "3307:3306"
+
+  # Browser-based DB Editor (Accessible at localhost:8081)
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: db-editor
+    ports:
+    - "8081:80"
+    depends_on:
+      - db
+
+  # Your Spring Boot App (Java 25)
+  app:
+      build: 
+        context: ./real # This points to the folder containing your code and Dockerfile
+      container_name: spring-backend
+      ports:
+        - "9090:8080"
+        - "5005:5005"
+      environment:
+        # We use 'db' here because inside Docker, containers use service names
+        SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/personal_site?allowPublicKeyRetrieval=true&useSSL=false
+        SPRING_DATASOURCE_USERNAME: root
+        SPRING_DATASOURCE_PASSWORD: rootpassword
+        JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+
+      depends_on:
+        - db
