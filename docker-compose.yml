@@ -2,6 +2,8 @@ services:
   # Database
   db:
     image: mysql:8.4 # Using the 2024/2025 LTS version of MySQL
+    volumes:
+    - mysql-data:/var/lib/mysql
     container_name: mysql-db
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
@@ -18,6 +20,13 @@ services:
     depends_on:
       - db
 
+
+  redis:
+    image: redis:7.2
+    container_name: redis-cache
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
   # Your Spring Boot App (Java 25)
   app:
       build: 
@@ -32,6 +41,12 @@ services:
         SPRING_DATASOURCE_USERNAME: root
         SPRING_DATASOURCE_PASSWORD: rootpassword
         JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+        SPRING_REDIS_HOST: redis
+        SPRING_REDIS_PORT: 6379
 
       depends_on:
         - db
+
+volumes:
+  mysql-data:    # Named volume for MySQL - persists across restarts
+  redis-data:     
